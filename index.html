@@ -293,6 +293,14 @@
             this.coords = new THREE.Vector2(0,0);
             this.coords_old = new THREE.Vector2(0,0);
             this.diff = new THREE.Vector2(0,0);
+            // --- ORBIT (always-on motion) ---
+            this.user = new THREE.Vector2(0, 0);       // last real pointer coords (-1..1)
+            this.lastInteract = performance.now();      // last time user moved
+            this.orbit = new THREE.Vector2(0, 0);       // virtual pointer
+            this.orbitSpeed = 0.10;                     // 0.06–0.14
+            this.orbitAmp = 0.90;                       // 0.75–0.95
+            this.orbitResumeDelay = 700;                // ms before orbit takes over
+            this.orbitRamp = 900;                       // ms blend duration
             this.container = null;
             this.isHoverInside = false;
             this._mm = (e)=>this.onMove(e.clientX,e.clientY);
@@ -310,14 +318,38 @@
             const nx = (x - r.left) / r.width;
             const ny = (y - r.top) / r.height;
             this.coords.set(nx*2-1, -(ny*2-1));
+            this.user.copy(this.coords);
+            this.lastInteract = performance.now();
           }
           update(){
+            const now = performance.now();
+            const t = now * 0.001 * this.orbitSpeed;
+          
+            // Lissajous smooth (no jerks)
+            this.orbit.set(
+              Math.sin(t * 1.0) * this.orbitAmp,
+              Math.cos(t * 1.3) * this.orbitAmp
+            );
+          
+            // blend orbit in when user is idle
+            const idleMs = now - this.lastInteract;
+            let blend = 0;
+            if (idleMs > this.orbitResumeDelay) {
+              blend = Math.min(1, (idleMs - this.orbitResumeDelay) / this.orbitRamp);
+              // smoothstep
+              blend = blend * blend * (3 - 2 * blend);
+            }
+          
+            // coords = lerp(user -> orbit)
+            this.coords.copy(this.user).lerp(this.orbit, blend);
+          
+            // diff for injecting force
             this.diff.subVectors(this.coords, this.coords_old);
             this.coords_old.copy(this.coords);
-            if (this.coords_old.x===0 && this.coords_old.y===0) this.diff.set(0,0);
+          
+            // safety
+            if (this.coords_old.x === 0 && this.coords_old.y === 0) this.diff.set(0,0);
           }
-        }
-
         class ShaderPass {
           constructor(Common, props){
             this.Common = Common;
