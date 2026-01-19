@@ -22,7 +22,14 @@
         pointer-events: none; /* keeps Wix UI clickable */
         background: transparent;
       }
-      canvas { display:block; width:100%; height:100%; }
+      canvas {
+        display: block;
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+      }
     </style>
 
     <script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
@@ -83,7 +90,6 @@
 
         const paletteTex = makePaletteTexture(OPTS.colors);
         const bgVec4 = new THREE.Vector4(0.0196, 0.0314, 0.0863, 1.0);
-
 
         const face_vert = `
           attribute vec3 position;
@@ -293,14 +299,16 @@
             this.coords = new THREE.Vector2(0,0);
             this.coords_old = new THREE.Vector2(0,0);
             this.diff = new THREE.Vector2(0,0);
+
             // --- ORBIT (always-on motion) ---
-            this.user = new THREE.Vector2(0, 0);       // last real pointer coords (-1..1)
-            this.lastInteract = performance.now()- 999999;      // last time user moved
-            this.orbit = new THREE.Vector2(0, 0);       // virtual pointer
-            this.orbitSpeed = 0.085;                     // 0.06–0.14
-            this.orbitAmp = 0.82;                       // 0.75–0.95
-            this.orbitResumeDelay = 400;                // ms before orbit takes over
-            this.orbitRamp = 1200;                       // ms blend duration
+            this.user = new THREE.Vector2(0, 0);
+            this.lastInteract = performance.now() - 999999;
+            this.orbit = new THREE.Vector2(0, 0);
+            this.orbitSpeed = 0.085;
+            this.orbitAmp = 0.82;
+            this.orbitResumeDelay = 400;
+            this.orbitRamp = 1200;
+
             this.container = null;
             this.isHoverInside = false;
             this._mm = (e)=>this.onMove(e.clientX,e.clientY);
@@ -324,38 +332,38 @@
           update(){
             const now = performance.now();
             const t = now * 0.001 * this.orbitSpeed;
-            
+
             // Lissajous smooth (no jerks)
             this.orbit.set(
               Math.sin(t * 1.0) * this.orbitAmp,
               Math.cos(t * 1.3) * this.orbitAmp
             );
-          
+
             // blend orbit in when user is idle
             const idleMs = now - this.lastInteract;
             let blend = 0;
             if (idleMs > this.orbitResumeDelay) {
               blend = Math.min(1, (idleMs - this.orbitResumeDelay) / this.orbitRamp);
-              // smoothstep
-              blend = blend * blend * (3 - 2 * blend);
+              blend = blend * blend * (3 - 2 * blend); // smoothstep
             }
-          
+
             // coords = lerp(user -> orbit)
             this.coords.copy(this.user).lerp(this.orbit, blend);
-          
+
             // diff for injecting force
             this.diff.subVectors(this.coords, this.coords_old);
             this.coords_old.copy(this.coords);
-          
+
             // safety
             if (this.coords_old.x === 0 && this.coords_old.y === 0) this.diff.set(0,0);
-            }
-           }
+          }
+        }
+
         class ShaderPass {
           constructor(Common, props){
             this.Common = Common;
             this.props = props || {};
-            this.uniforms = this.props.material?.uniforms;
+            this.uniforms = this.props.material && this.props.material.uniforms ? this.props.material.uniforms : null;
             this.scene = new THREE.Scene();
             this.camera = new THREE.Camera();
             if(this.uniforms){
@@ -775,26 +783,6 @@
           }
         });
       })();
-
-</script>
-
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: -1;
-}
-</style>
-
-</body>
+    </script>
+  </body>
 </html>
-
