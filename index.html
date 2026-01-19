@@ -324,7 +324,7 @@
           update(){
             const now = performance.now();
             const t = now * 0.001 * this.orbitSpeed;
-          
+            
             // Lissajous smooth (no jerks)
             this.orbit.set(
               Math.sin(t * 1.0) * this.orbitAmp,
@@ -349,7 +349,8 @@
           
             // safety
             if (this.coords_old.x === 0 && this.coords_old.y === 0) this.diff.set(0,0);
-          }
+            }
+           }
         class ShaderPass {
           constructor(Common, props){
             this.Common = Common;
