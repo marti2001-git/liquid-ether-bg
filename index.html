@@ -295,12 +295,12 @@
             this.diff = new THREE.Vector2(0,0);
             // --- ORBIT (always-on motion) ---
             this.user = new THREE.Vector2(0, 0);       // last real pointer coords (-1..1)
-            this.lastInteract = performance.now();      // last time user moved
+            this.lastInteract = performance.now()- 999999;      // last time user moved
             this.orbit = new THREE.Vector2(0, 0);       // virtual pointer
-            this.orbitSpeed = 0.10;                     // 0.06–0.14
-            this.orbitAmp = 0.90;                       // 0.75–0.95
-            this.orbitResumeDelay = 700;                // ms before orbit takes over
-            this.orbitRamp = 900;                       // ms blend duration
+            this.orbitSpeed = 0.085;                     // 0.06–0.14
+            this.orbitAmp = 0.82;                       // 0.75–0.95
+            this.orbitResumeDelay = 400;                // ms before orbit takes over
+            this.orbitRamp = 1200;                       // ms blend duration
             this.container = null;
             this.isHoverInside = false;
             this._mm = (e)=>this.onMove(e.clientX,e.clientY);
